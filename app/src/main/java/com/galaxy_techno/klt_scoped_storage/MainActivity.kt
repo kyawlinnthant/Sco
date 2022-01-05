@@ -1,5 +1,6 @@
 package com.galaxy_techno.klt_scoped_storage
 
+import android.app.Activity
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
@@ -29,23 +30,29 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         btnCamera.setOnClickListener {
-            takeImage()
+//            takeImage()
+            choosePDF()
         }
         btnGallery.setOnClickListener {
             selectImageFromGallery()
         }
     }
 
+
     private val fromPDF = registerForActivityResult(
-        ActivityResultContracts.OpenDocument()
-    ) {
-        it?.let { uri ->
-            this.contentResolver?.takePersistableUriPermission(
-                uri,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION
-            )
-            //get file
+        ActivityResultContracts.StartActivityForResult()
+    ){
+        it?.let {
+            if (it.resultCode == Activity.RESULT_OK) {
+                this.contentResolver?.takePersistableUriPermission(
+                    it.data?.data!!,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+                val file = DocumentUtils.getFile(this,it.data?.data!!) //use pdf as file
+                Toast.makeText(this,file.absolutePath,Toast.LENGTH_SHORT).show()
+            }
         }
+
     }
 
     private val fromCamera = registerForActivityResult(
@@ -96,9 +103,8 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             addCategory(Intent.CATEGORY_OPENABLE)
             type = "application/pdf"
         }
-//        val req = registerForActivityResult(ActivityResultContracts.StartActivityForResult(intent)){
-//
-//        }
+
+        fromPDF.launch(intent)
 
 
     }
